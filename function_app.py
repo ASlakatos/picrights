@@ -9,7 +9,7 @@ def helloworldlkt(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
     return func.HttpResponse(
-        json.dumps({"message": "Diego Simeone egy remek ember"}),
+        json.dumps({"message": "Diego Simeone egy mocskos ember"}),
         mimetype="application/json"
     )
 
