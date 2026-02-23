@@ -38,7 +38,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
 
     # Group by ID case (image sheet), minden más oszlopban összegezzük vesszővel elválasztva
     def aggregate_rows(series):
-        return ", ".join(series.astype(str))
+        return ", ".join(series.astype(str).replace('nan', '').replace('None', '').strip().tolist())
     df_images_collapsed = df_images.groupby('ID Case').agg(aggregate_rows).reset_index()
 
     # Cases, images merge
