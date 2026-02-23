@@ -32,6 +32,8 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     df_cases = pd.read_excel(file_stream, sheet_name="Cases")
     df_images = pd.read_excel(file_stream, sheet_name="Images")
     df_contacts = pd.read_excel(file_stream, sheet_name="Contacts")
+    # Szerepelhet ugyanaz az infringer többször a clients sheet-en, miért? törlöm csak az elsőt hagyom meg
+    df_contacts = df_contacts.drop_duplicates(subset=['ID Infringer'], keep='first')
 
     # Cases, contacts merge
     df_merged = pd.merge(df_cases, df_contacts, on='ID Infringer', how='left')
@@ -42,8 +44,14 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     df_images_collapsed = df_images.groupby('ID Case').agg(aggregate_rows).reset_index()
 
     # Cases, images merge
-    final_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left').groupby('ID Case')
-    
+    final_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left')
+        
+    # JSON letrehozas
+    final_df_clean = final_df.fillna("")
+    client_data = {
+        str(k): v.to_dict(orient='records') for k, v in final_df_clean.groupby('ID Client')
+    }
+
     # Változások elmentése, output file kiírása
     output_stream = io.BytesIO()
     with pd.ExcelWriter(output_stream, engine='openpyxl') as writer:
@@ -56,8 +64,14 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     blob_client_out = blob_service_client.get_blob_client(container=container_output, blob=filename)
     blob_client_out.upload_blob(output_stream, overwrite=True)
     
+    response_payload = {
+            "filename": filename,
+            "message": "Success",
+            "data": client_data
+        }
+
     # Response
     return func.HttpResponse(
-        json.dumps({"message": "Success", "filename": filename}), 
+        json.dumps(response_payload), 
         mimetype="application/json"
     )
