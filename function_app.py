@@ -43,8 +43,6 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
 
     # Cases, images merge
     final_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left')
-
-    final_df.to_excel(filename, index=False)
     
     # Változások elmentése, output file kiírása
     output_stream = io.BytesIO()
