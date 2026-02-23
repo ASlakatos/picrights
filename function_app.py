@@ -42,7 +42,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     df_images_collapsed = df_images.groupby('ID Case').agg(aggregate_rows).reset_index()
 
     # Cases, images merge
-    final_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left')
+    final_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left').groupby('ID Case')
     
     # Változások elmentése, output file kiírása
     output_stream = io.BytesIO()
