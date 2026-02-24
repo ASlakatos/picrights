@@ -48,9 +48,8 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
         
     # JSON letrehozas
     final_df_clean = final_df.fillna("")
-    client_data = {
-        str(k): v.to_dict(orient='records') for k, v in final_df_clean.groupby('ID Client')
-    }
+
+    client_data = final_df_clean.to_dict(orient='records')
 
     # Változások elmentése, output file kiírása
     output_stream = io.BytesIO()
