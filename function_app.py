@@ -6,6 +6,11 @@ import os
 from azure.storage.blob import BlobServiceClient
 import openpyxl
 import pandas as pd
+import io
+import os
+from azure.storage.blob import BlobServiceClient
+import openpyxl
+import pandas as pd
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -43,8 +48,22 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
         return [str(x) for x in series if pd.notna(x) and str(x).lower() != 'none']
     df_images_collapsed = df_images.groupby('ID Case').agg(aggregate_rows).reset_index()
 
-    # Cases, images merge
+        # Képek száma ID Case-enként
+    df_image_counts = (
+        df_images.groupby('ID Case')
+        .size()
+        .reset_index(name='ImageCount')
+    )
+    df_image_counts['Singular/Plural'] = (df_image_counts['ImageCount'] > 1).astype(int)
+
+        # Cases, images merge
     final_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left')
+
+    # Singular/Plural oszlop hozzáadása a Merged-hez
+    final_df = pd.merge(final_df, df_image_counts[['ID Case', 'Singular/Plural']], on='ID Case', how='left')
+
+    # Ha nincs kép az ID Case-hez, legyen 0
+    final_df['Singular/Plural'] = final_df['Singular/Plural'].fillna(0).astype(int)
         
     # JSON letrehozas
     final_df_clean = final_df.fillna("")
@@ -71,6 +90,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
 
     # Response
     return func.HttpResponse(
+        json.dumps(response_payload), 
         json.dumps(response_payload), 
         mimetype="application/json"
     )
