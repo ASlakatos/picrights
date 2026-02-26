@@ -6,7 +6,7 @@ import os
 from azure.storage.blob import BlobServiceClient
 import openpyxl
 import pandas as pd
-import num2words
+from num2words import num2words
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
