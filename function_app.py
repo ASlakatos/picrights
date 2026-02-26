@@ -6,6 +6,7 @@ import os
 from azure.storage.blob import BlobServiceClient
 import openpyxl
 import pandas as pd
+import num2words
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -14,7 +15,9 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
 
     # POST body elemntése
     req_body = req.get_json()   
-    filename = req_body.get('filename')
+    input_filename = req_body.get('filename')
+    jogtulajdonos_file = "jogtulajdonosok.xlsx"
+
 
     # Kapcsolat a storeg-al
     connection_string = os.environ.get("StorageConnectionString")
@@ -22,26 +25,26 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     
     container_input = "input-excel"
     container_output = "output-excel"
-    
+    container_jogtulajdonos = "jogtulajdonosok"
+
     # Input excel letöltése store-ból
-    blob_client_in = blob_service_client.get_blob_client(container=container_input, blob=filename)
+    blob_client_in = blob_service_client.get_blob_client(container=container_input, blob=input_filename)
     download_stream = blob_client_in.download_blob()
-    file_stream = io.BytesIO(download_stream.readall())
+    input_file_stream = io.BytesIO(download_stream.readall())
     
-    # Excel fájl feldolgozása
-    df_cases = pd.read_excel(file_stream, sheet_name="Cases")
-    df_images = pd.read_excel(file_stream, sheet_name="Images")
-    df_contacts = pd.read_excel(file_stream, sheet_name="Contacts")
+    # Jogutlajdonos excel letoltese
+    blob_client_in = blob_service_client.get_blob_client(container=container_jogtulajdonos, blob=jogtulajdonos_file)
+    download_stream = blob_client_in.download_blob()
+    jogtulajdonos_file_stream = io.BytesIO(download_stream.readall())
+
+    # Jogtulajdonos excel feldolgozasa
+    df_jogtulajdonosok = pd.read_excel(jogtulajdonos_file_stream)
+    # Input xcel fájl feldolgozása
+    df_cases = pd.read_excel(input_file_stream, sheet_name="Cases")
+    df_images = pd.read_excel(input_file_stream, sheet_name="Images")
+    df_contacts = pd.read_excel(input_file_stream, sheet_name="Contacts")
     # Szerepelhet ugyanaz az infringer többször a clients sheet-en, miért? törlöm csak az elsőt hagyom meg
     df_contacts = df_contacts.drop_duplicates(subset=['ID Infringer'], keep='first')
-
-    # Képek száma ID Case-enként
-    df_image_counts = (
-        df_images.groupby('ID Case')
-        .size()
-        .reset_index(name='ImageCount')
-    )
-    df_image_counts['Singular/Plural'] = (df_image_counts['ImageCount'] > 1).astype(int)
 
     # Cases, contacts merge
     df_merged = pd.merge(df_cases, df_contacts, on='ID Infringer', how='left')
@@ -53,13 +56,15 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
 
     # Cases, images merge
     final_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left')
-
-    # Singular/Plural oszlop hozzáadása a Merged-hez
-    final_df = pd.merge(final_df, df_image_counts[['ID Case', 'Singular/Plural']], on='ID Case', how='left')
-
-    # Ha nincs kép az ID Case-hez, legyen 0
-    final_df['Singular/Plural'] = final_df['Singular/Plural'].fillna(0).astype(int)
-        
+    
+    # Egy vagy tobb kep
+    final_df['Singular/Plural'] = (final_df['URL Stored'].str.len() > 1).astype(int)
+    # Hany kep
+    final_df['Image Count'] = final_df['URL Stored'].str.len().astype(int) 
+    # Magyar osszeg
+    final_df['Amount HUN'] = final_df['Demand Amount'].apply(lambda x: num2words(x, lang='hu'))
+    # Angol osszeg
+    final_df['Amount ENG'] = final_df['Demand Amount'].apply(lambda x: num2words(x, lang='en'))
     # JSON letrehozas
     final_df_clean = final_df.fillna("")
 
@@ -74,11 +79,11 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
         final_df.to_excel(writer, index=False, sheet_name='Merged')
     output_stream.seek(0)
     
-    blob_client_out = blob_service_client.get_blob_client(container=container_output, blob=filename)
+    blob_client_out = blob_service_client.get_blob_client(container=container_output, blob=input_filename)
     blob_client_out.upload_blob(output_stream, overwrite=True)
     
     response_payload = {
-            "filename": filename,
+            "filename": input_filename,
             "message": "Success",
             "data": client_data
         }
