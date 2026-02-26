@@ -55,8 +55,11 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     df_images_collapsed = df_images.groupby('ID Case').agg(aggregate_rows).reset_index()
 
     # Cases, images merge
-    final_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left')
+    image_merged_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left')
     
+    # Cases, jogtulajdonosok
+    final_df = pd.merge(image_merged_df, df_jogtulajdonosok, on='CustomerName', how='left')
+
     # Egy vagy tobb kep
     final_df['Singular/Plural'] = (final_df['URL Stored'].str.len() > 1).astype(int)
     # Hany kep
