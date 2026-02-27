@@ -7,6 +7,8 @@ from azure.storage.blob import BlobServiceClient
 import openpyxl
 import pandas as pd
 from num2words import num2words
+import datetime
+
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -58,7 +60,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     image_merged_df = pd.merge(df_merged, df_images_collapsed, on='ID Case', how='left')
     
     # Cases, jogtulajdonosok
-    final_df = pd.merge(image_merged_df, df_jogtulajdonosok, on='CustomerName', how='left')
+    final_df = pd.merge(image_merged_df, df_jogtulajdonosok, on='ID Client', how='left')
 
     # Egy vagy tobb kep
     final_df['Singular/Plural'] = (final_df['URL Stored'].str.len() > 1).astype(int)
@@ -71,7 +73,19 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     # JSON letrehozas
     final_df_clean = final_df.fillna("")
 
-    client_data = final_df_clean.to_dict(orient='records')
+
+    client_data = (final_df_clean[['CustomerName', 'Address', 'Claim Amount', 'Amount HUN', 'Amount ENG', 'PaymentLink', 'Pass', 'ID Case']]
+    .rename(columns={
+        'CustomerName': 'cegnev', 
+        'Address': 'szekhely',
+        'Claim Amount': 'demand',
+        'Amount HUN': 'amount_hu',
+        'Amount ENG': 'amount_eng',
+        'PaymentLink': 'payment_link',
+        'Pass': 'pass',
+        'ID Case': 'ID'
+    }).to_dict(orient='records')
+    )
 
     # Változások elmentése, output file kiírása
     output_stream = io.BytesIO()
