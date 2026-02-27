@@ -71,7 +71,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     # Angol osszeg
     final_df['Amount ENG'] = final_df['Demand Amount'].apply(lambda x: num2words(x, lang='en'))
     # JSON letrehozas
-
+    print(final_df)
 
     client_data = (final_df[['CustomerName', 'Address', 'Claim Amount', 'Amount HUN', 'Amount ENG', 'PaymentLink', 'Pass', 'ID Case']]
     .rename(columns={
