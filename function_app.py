@@ -71,10 +71,9 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     # Angol osszeg
     final_df['Amount ENG'] = final_df['Demand Amount'].apply(lambda x: num2words(x, lang='en'))
     # JSON letrehozas
-    final_df_clean = final_df.fillna("")
 
 
-    client_data = (final_df_clean[['CustomerName', 'Address', 'Claim Amount', 'Amount HUN', 'Amount ENG', 'PaymentLink', 'Pass', 'ID Case']]
+    client_data = (final_df[['CustomerName', 'Address', 'Claim Amount', 'Amount HUN', 'Amount ENG', 'PaymentLink', 'Pass', 'ID Case']]
     .rename(columns={
         'CustomerName': 'cegnev', 
         'Address': 'szekhely',
@@ -84,8 +83,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
         'PaymentLink': 'payment_link',
         'Pass': 'pass',
         'ID Case': 'ID'
-    }).to_dict(orient='records')
-    )
+    }).to_dict(orient='records'))
 
     # Változások elmentése, output file kiírása
     output_stream = io.BytesIO()
