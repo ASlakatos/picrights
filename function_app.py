@@ -73,7 +73,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     # ID feldarabolás
     final_df['ID_1'] = final_df['ID Case'].astype(str).str[0:4]
     final_df['ID_2'] = final_df['ID Case'].astype(str).str[4:8]
-    final_df['ID_2'] = final_df['ID Case'].astype(str).str[8:12]
+    final_df['ID_3'] = final_df['ID Case'].astype(str).str[8:12]
     # JSON letrehozas
 
     now = datetime.now()
