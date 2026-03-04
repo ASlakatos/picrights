@@ -80,7 +80,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     formatted_date = now.strftime("%m/%d/%Y")
     final_df['date'] = formatted_date
     final_df.columns = final_df.columns.str.strip()
-    client_data = (final_df[['ID Case','CustomerName', 'Address', 'Claim Amount', 'Amount HUN', 'Amount ENG', 'PaymentLink', 'Pass', 'date' 'ID_1', 'ID_2', 'ID_3', 'Service Provider', 'Ugyvezeto', 'InfringerAddress', 'Catalog Image Path', 'Screencapture Path', 'Image Count', 'Singular/Plural']]
+    client_data = (final_df[['ID Case','CustomerName', 'Address', 'Claim Amount', 'Amount HUN', 'Amount ENG', 'PaymentLink', 'Pass', 'date', 'ID_1', 'ID_2', 'ID_3', 'Service Provider', 'Ugyvezeto', 'InfringerAddress', 'Catalog Image Path', 'Screencapture Path', 'Image Count', 'Singular/Plural']]
     .rename(columns={
         'Service Provider': 'cegnev', 
         'InfringerAddress': 'szekhely',
