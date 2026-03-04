@@ -70,19 +70,29 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     final_df['Amount HUN'] = final_df['Demand Amount'].apply(lambda x: num2words(x, lang='hu'))
     # Angol osszeg
     final_df['Amount ENG'] = final_df['Demand Amount'].apply(lambda x: num2words(x, lang='en'))
-    # JSON letrehozas
-    print(final_df)
 
-    client_data = (final_df[['CustomerName', 'Address', 'Claim Amount', 'Amount HUN', 'Amount ENG', 'PaymentLink', 'Pass', 'ID Case']]
+    # ID feldarabolás
+    final_df['ID_1'] = final_df['ID Case'].astype(str).str[0:4]
+    final_df['ID_2'] = final_df['ID Case'].astype(str).str[4:8]
+    final_df['ID_2'] = final_df['ID Case'].astype(str).str[8:12]
+    # JSON letrehozas
+
+    now = datetime.now()
+    formatted_date = now.strftime("%m/%d/%Y")
+    final_df['date'] = formatted_date
+    final_df.columns = final_df.columns.str.strip()
+    client_data = (final_df[['ID Case','CustomerName', 'Address', 'Claim Amount', 'Amount HUN', 'Amount ENG', 'PaymentLink', 'Pass', 'date' 'ID_1', 'ID_2', 'ID_3', 'Service Provider', 'Ugyvezeto', 'InfringerAddress', 'Catalog Image Path', 'Screencapture Path', 'Image Count', 'Singular/Plural']]
     .rename(columns={
-        'CustomerName': 'cegnev', 
-        'Address': 'szekhely',
+        'Service Provider': 'cegnev', 
+        'InfringerAddress': 'szekhely',
+        'Ugyvezeto': 'ugyvezeto',
         'Claim Amount': 'demand',
         'Amount HUN': 'amount_hu',
-        'Amount ENG': 'amount_eng',
+        'Amount ENG': 'amount_en',
         'PaymentLink': 'payment_link',
         'Pass': 'pass',
-        'ID Case': 'ID'
+        'Catalog Image Path': 'image_link',
+        'Screencapture Path': 'screen_link'
     }).to_dict(orient='records'))
 
     # Változások elmentése, output file kiírása
@@ -100,7 +110,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     response_payload = {
             "filename": input_filename,
             "message": "Success",
-            "data": client_data
+            "data": client_data[:5]
         }
 
     # Response
