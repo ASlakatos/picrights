@@ -7,8 +7,7 @@ from azure.storage.blob import BlobServiceClient
 import openpyxl
 import pandas as pd
 from num2words import num2words
-import datetime
-
+from datetime import datetime
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
