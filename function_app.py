@@ -111,7 +111,7 @@ def picrights_http(req: func.HttpRequest) -> func.HttpResponse:
     response_payload = {
             "filename": input_filename,
             "message": "Success",
-            "data": client_data[:5]
+            "data": client_data
         }
 
     # Response
